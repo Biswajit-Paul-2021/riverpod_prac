@@ -8,6 +8,8 @@ class PlanNotifier extends StateNotifier<ListState> {
 
   PlanNotifier(this._apiService) : super(const ListState.loading());
 
+  Loaded get previousLoadedState => state as Loaded;
+
   Future<void> getPlaneDetails() async {
     try {
       state = const ListState.loading();
@@ -33,8 +35,8 @@ class PlanNotifier extends StateNotifier<ListState> {
 
   Future<void> getNextPage() async {
     try {
-      final prevState = state as Loaded;
-      int page = prevState.page;
+      //final prevState = state as Loaded;
+      int page = previousLoadedState.page;
 
       final response = await _apiService.instance.get(
         'https://api.instantwebtools.net/v1/passenger',
@@ -49,7 +51,7 @@ class PlanNotifier extends StateNotifier<ListState> {
                 PlaneDetails.fromJson(response.data).totalPassengers,
             totalPages: PlaneDetails.fromJson(response.data).totalPages,
             data: [
-              ...prevState.planeDetails.data!,
+              ...previousLoadedState.planeDetails.data!,
               ...PlaneDetails.fromJson(response.data).data!
             ]);
         state = ListState.loaded(
@@ -65,11 +67,10 @@ class PlanNotifier extends StateNotifier<ListState> {
   }
 
   void markFav(int pos) {
-    final prevState = state as Loaded;
-
-    prevState.planeDetails.data![pos].isFav =
-        !prevState.planeDetails.data![pos].isFav;
+    previousLoadedState.planeDetails.data![pos].isFav =
+        !previousLoadedState.planeDetails.data![pos].isFav;
     state = ListState.loaded(
-        planeDetails: prevState.planeDetails, page: prevState.page);
+        planeDetails: previousLoadedState.planeDetails,
+        page: previousLoadedState.page);
   }
 }
